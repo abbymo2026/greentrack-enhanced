@@ -1,11 +1,12 @@
-
 services:
+  # BACKEND SERVICE (Node.js API)
   - type: web
     name: greentrack-backend
     rootDir: backend
-    env: node
+    runtime: node
     buildCommand: "npm install"
     startCommand: "node server.js"
+    autoDeploy: true
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -14,15 +15,22 @@ services:
       - key: NODE_ENV
         value: production
 
-  - type: static
+  # FRONTEND SERVICE (React / Vite static site)
+  - type: web
     name: greentrack-frontend
     rootDir: frontend
+    runtime: static
     buildCommand: "npm install && npm run build"
     staticPublishPath: "dist"
+    autoDeploy: true
     envVars:
       - key: VITE_API_BASE
+        # Render will assign a real hostname after backend is created.
+        # After first deploy, update this to the real backend URL.
         value: https://greentrack-backend.onrender.com/api
 
+# POSTGRESQL DATABASE (Free tier)
 databases:
   - name: greentrack-db
     plan: free
+``
