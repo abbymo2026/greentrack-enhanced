@@ -33,4 +33,3 @@ services:
 databases:
   - name: greentrack-db
     plan: free
-``
