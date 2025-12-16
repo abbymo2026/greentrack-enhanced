@@ -365,19 +365,23 @@ app.get('/api/dashboard/stats', async (req, res) => {
       FROM grants
     `);
     
-    // Get upcoming deadlines
-    const deadlines = await pool.query(`
-      SELECT name, deadline, amount, priority
-      FROM grants
-      WHERE status NOT IN ('Successful', 'Unsuccessful', 'Withdrawn')
-      AND deadline IS NOT NULL
-      ORDER BY 
-        CASE 
-          WHEN deadline ~ '^[0-9]' THEN TO_DATE(deadline, 'Mon DD, YYYY')
-          ELSE TO_DATE('9999-12-31', 'YYYY-MM-DD')
-        END
-      LIMIT 5
-    `);
+    // Get upcoming deadlines - handles various date formats safely
+const deadlines = await pool.query(`
+  SELECT name, deadline, amount, priority
+  FROM grants
+  WHERE status NOT IN ('Successful', 'Unsuccessful', 'Withdrawn')
+  AND deadline IS NOT NULL
+  AND deadline != ''
+  AND deadline NOT LIKE 'Rolling%'
+  ORDER BY 
+    CASE 
+      WHEN deadline ~ '^[A-Za-z]{3} [0-9]{1,2}, [0-9]{4}$' THEN 1
+      WHEN deadline ~ '^Q[1-4] [0-9]{4}$' THEN 2
+      ELSE 3
+    END,
+    deadline
+  LIMIT 10
+`);
     
     // Get recent outcomes
     const recentOutcomes = await pool.query(`
